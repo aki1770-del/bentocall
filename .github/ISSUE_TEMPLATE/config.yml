@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or how-to
+    url: https://github.com/aki1770-del/bentocall/discussions
+    about: For questions, "how do I…", and design discussion. Issues are reserved for bugs and feature requests.
+  - name: Maintenance posture
+    url: https://github.com/aki1770-del/bentocall/blob/main/README.md#maintenance-posture
+    about: Before filing — bentocall is a one-person reference implementation. Please read the maintenance posture section first.

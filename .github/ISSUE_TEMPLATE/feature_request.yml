@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a specific change
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        bentocall is a focused reference implementation. Feature requests need to demonstrate concrete need, not "would be nice." Vague requests get closed.
+
+        **For new task adapters: read CONTRIBUTING.md first** — adapters are the most valuable contribution and have a clear template; you may not need to file an issue at all, just open the PR.
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you tried
+      description: How are you currently solving the problem (without this feature)?
+    validations:
+      required: true
+  - type: textarea
+    id: didnt_work
+    attributes:
+      label: Why that didn't work
+      description: Specific limitation, not aesthetic preference.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What specifically would fix it
+      description: Concrete proposal — API shape, CLI flag, behavior change. The clearer this is, the more likely it gets merged.
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - New task adapter (read CONTRIBUTING.md first — usually file PR directly)
+        - Routing / threshold change
+        - CLI flag
+        - Library API
+        - Documentation
+        - Other
+    validations:
+      required: true

@@ -1,0 +1,58 @@
+name: Bug report
+description: Reproducible bug in bentocall
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports without a reproducer will be closed. The smaller the reproducer, the faster the fix.
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Smallest reproducer
+      description: Shell commands or a Python snippet that triggers the bug. Self-contained.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened
+      description: Include any error message verbatim.
+    validations:
+      required: true
+  - type: input
+    id: bentocall_version
+    attributes:
+      label: bentocall version
+      description: "Output of: `python -c 'import bentocall; print(bentocall.__version__)'`"
+    validations:
+      required: true
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      description: "Output of: `python --version`"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: OpenRouter model used
+      description: "e.g. anthropic/claude-haiku-4.5"
+    validations:
+      required: true
+  - type: textarea
+    id: sample_input
+    attributes:
+      label: Sample input that triggers the bug
+      description: A document snippet (or generated case params + seed) that reproduces. Truncate large inputs.
+    validations:
+      required: true
