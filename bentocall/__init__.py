@@ -14,5 +14,5 @@ CLI:
 """
 from bentocall.api import solve, SUPPORTED_TASKS, ROUTE_THRESHOLDS
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = ["solve", "SUPPORTED_TASKS", "ROUTE_THRESHOLDS", "__version__"]

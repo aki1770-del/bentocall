@@ -28,6 +28,22 @@ pip install bentocall
 export OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
+### Local-inference backend (v0.1.1+)
+
+Point bentocall at any OpenAI-compatible local server (llama.cpp `llama-server`, vLLM, LM Studio, …) instead of OpenRouter:
+
+```sh
+# example: llama.cpp serving Hermes-3-Llama-3.1-8B at port 8765
+export BENTOCALL_BASE_URL="http://127.0.0.1:8765/v1/chat/completions"
+export BENTOCALL_MODEL_HAIKU="hermes-3-llama-3.1-8b"
+# OPENROUTER_API_KEY is optional when using a local server
+unset OPENROUTER_API_KEY
+
+bentocall --task ool_pairs --self-test
+```
+
+Validated on `ool_pairs`: Hermes-3-8B Q4 hits 10/10 perfect F1, identical to cloud Haiku. **Not** validated for `aggregate_counts` — small local models drift ~4× more than Haiku on counting; route those to cloud. See `bentocall.research.drift` for measuring this on your own setup.
+
 ## Use
 
 CLI:

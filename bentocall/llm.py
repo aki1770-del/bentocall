@@ -1,8 +1,17 @@
-"""OpenRouter client.
+"""LLM client (OpenRouter by default; OpenAI-compatible local servers via env override).
 
-Loads OPENROUTER_API_KEY from the environment. Every call appends to a
-JSONL log under `${BENTOCALL_DATA_DIR:-~/.local/share/bentocall}/calls.jsonl`
+Loads OPENROUTER_API_KEY from the environment for cloud calls. Every call
+appends to a JSONL log under `${BENTOCALL_DATA_DIR:-~/.local/share/bentocall}/calls.jsonl`
 for cost/trace accounting.
+
+Local-server override (e.g. llama.cpp `llama-server`):
+    export BENTOCALL_BASE_URL="http://127.0.0.1:8765/v1/chat/completions"
+    export BENTOCALL_MODEL_HAIKU="hermes-3-llama-3.1-8b"   # alias map override
+    export BENTOCALL_MODEL_SONNET="hermes-3-llama-3.1-8b"  # (or different model)
+    # OPENROUTER_API_KEY is OPTIONAL when using a local server.
+
+Cost is logged as $0 for any model not in PRICE_PER_MTOK — accurate for local
+inference, where token usage data still flows through but isn't billed.
 """
 from __future__ import annotations
 
@@ -36,23 +45,38 @@ PRICE_PER_MTOK = {  # USD per million tokens, (input, output)
 CACHE_WRITE_MULT = 1.25
 CACHE_READ_MULT = 0.10
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+_DEFAULT_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_URL = os.environ.get("BENTOCALL_BASE_URL", _DEFAULT_OPENROUTER_URL)
+
+# Allow callers to remap "haiku"/"sonnet" aliases to whatever model name a
+# local server uses. Useful for `BENTOCALL_BASE_URL` overrides pointing at
+# llama.cpp / vLLM / LM Studio.
+for _alias in ("haiku", "sonnet"):
+    _env_override = os.environ.get(f"BENTOCALL_MODEL_{_alias.upper()}")
+    if _env_override:
+        MODEL_ALIASES[_alias] = _env_override
 
 _API_KEY: Optional[str] = None
 
 
-def _load_key() -> str:
+def _load_key() -> Optional[str]:
+    """Return the OpenRouter API key if set, else None.
+
+    A None return is fine when `BENTOCALL_BASE_URL` points at a local server
+    that doesn't require auth. The cloud path (default OpenRouter URL) still
+    needs a key — `M()` raises if it's about to call OpenRouter without one.
+    """
     global _API_KEY
     if _API_KEY:
         return _API_KEY
     key = os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        raise RuntimeError(
-            "OPENROUTER_API_KEY not set. Get one at https://openrouter.ai/keys "
-            "and `export OPENROUTER_API_KEY=sk-or-v1-...`."
-        )
-    _API_KEY = key
+    if key:
+        _API_KEY = key
     return _API_KEY
+
+
+def _is_cloud_url() -> bool:
+    return OPENROUTER_URL.startswith("https://openrouter.ai")
 
 
 def _resolve_model(name: str) -> str:
@@ -83,6 +107,12 @@ def M(
     the request still succeeds but no cache hit is recorded.
     """
     api_key = _load_key()
+    if api_key is None and _is_cloud_url():
+        raise RuntimeError(
+            "OPENROUTER_API_KEY not set, and BENTOCALL_BASE_URL is the default "
+            "(OpenRouter cloud). Either set the API key or override the URL "
+            "with `export BENTOCALL_BASE_URL=http://your-local-server/v1/chat/completions`."
+        )
     full_model = _resolve_model(model)
     messages: List[dict] = []
     if system:
@@ -106,11 +136,12 @@ def M(
         "temperature": temperature,
     }
     headers = {
-        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
         "HTTP-Referer": "https://github.com/aki1770-del/bentocall",
         "X-Title": "bentocall",
     }
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
 
     last_err: Optional[Exception] = None
     for attempt in range(retries):
